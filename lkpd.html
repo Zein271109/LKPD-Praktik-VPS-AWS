@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKPD: Manajemen Server VPS AWS - Faisal Akbar Mubaraq Zein</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        aws: {
+                            navy: '#232F3E',
+                            dark: '#161E2D',
+                            orange: '#FF9900',
+                            orangeHover: '#EC7211',
+                            light: '#F2F3F3',
+                            teal: '#00A1C9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom styling untuk input yang menyatu rapi namun tetap terlihat interaktif */
+        .editable-field {
+            transition: all 0.2s ease;
+            border-bottom: 1.5px dashed #cbd5e1;
+        }
+        .editable-field:hover {
+            background-color: #fffbeb;
+            border-bottom-color: #FF9900;
+        }
+        .editable-field:focus {
+            outline: none;
+            background-color: #fef3c7;
+            border-bottom: 2px solid #FF9900;
+        }
+
+        /* Pengaturan khusus saat dicetak / Export PDF */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-shadow-none {
+                box-shadow: none !important;
+                border: 1px solid #d1d5db !important;
+            }
+            .print-break-inside {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .editable-field {
+                border-bottom: 1px solid #9ca3af !important;
+                background: transparent !important;
+            }
+            nav {
+                position: static !important;
+                background-color: #232F3E !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-aws-navy, .bg-aws-dark, .bg-slate-900 {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .bg-amber-50, .bg-emerald-50, .bg-sky-50 {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased selection:bg-aws-orange selection:text-white">
+
+    <!-- Toast Notification (Pengganti alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 no-print">
+        <div class="bg-aws-navy text-white px-4 py-3 rounded-xl shadow-lg border-l-4 border-aws-orange flex items-center gap-3">
+            <svg class="w-5 h-5 text-aws-orange shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="toast-message" class="text-sm font-medium">Berhasil disalin!</span>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-40 bg-aws-navy text-white shadow-md border-b border-slate-700">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between py-3.5 gap-3">
+                <!-- Brand / Judul Utama -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-aws-orange/15 border border-aws-orange/40 p-2 rounded-xl flex items-center justify-center">
+                        <!-- Cloud Server SVG Icon -->
+                        <svg class="w-6 h-6 text-aws-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-[11px] uppercase tracking-wider text-aws-orange font-semibold block">Modul Praktik Cloud Computing</span>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">LKPD: Manajemen Server VPS AWS</h1>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 no-print">
+                    <span class="hidden md:inline-flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-full font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Terisi & Siap Kumpul
+                    </span>
+                    <button onclick="window.print()" class="inline-flex items-center gap-2 bg-aws-orange hover:bg-aws-orangeHover text-aws-dark font-semibold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-sm transition active:scale-95 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        <span>Cetak / Simpan PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        <!-- Banner Info Interaktif (Hanya tampil di layar, hilang saat print) -->
+        <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-4 no-print">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-sky-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-xs sm:text-sm text-sky-900">
+                    <strong>Mode Interaktif Aktif:</strong> Semua soal dan tabel telah diisi otomatis. Kamu tetap dapat mengklik teks jawaban, nama <em>Key Pair</em>, IP Publik, atau metrik CloudWatch untuk menyesuaikannya sebelum dicetak.
+                </p>
+            </div>
+        </div>
+
+        <!-- HEADER / KARTU IDENTITAS SISWA -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-shadow-none print-break-inside">
+            <div class="bg-gradient-to-r from-aws-navy to-aws-dark px-6 py-4 border-b-4 border-aws-orange flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-aws-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                    </svg>
+                    <h2 class="text-white font-bold text-base sm:text-lg">Lembar Kerja Peserta Didik (LKPD)</h2>
+                </div>
+                <span class="text-xs font-mono text-slate-300 bg-white/10 px-2.5 py-1 rounded-lg">AWS Cloud Practitioner Lab</span>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-slate-50/60">
+                <!-- Kolom Kiri -->
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 w-24 shrink-0">Nama</span>
+                        <div class="flex-1 flex items-center gap-2">
+                            <span class="hidden sm:inline text-slate-400">:</span>
+                            <input type="text" value="Faisal Akbar Mubaraq Zein" class="editable-field w-full font-semibold text-slate-900 bg-transparent px-2 py-1 rounded text-sm sm:text-base">
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 w-24 shrink-0">Kelas</span>
+                        <div class="flex-1 flex items-center gap-2">
+                            <span class="hidden sm:inline text-slate-400">:</span>
+                            <input type="text" value="XI RPL 1" class="editable-field w-full font-semibold text-slate-900 bg-transparent px-2 py-1 rounded text-sm sm:text-base">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan -->
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 w-24 shrink-0">Tanggal</span>
+                        <div class="flex-1 flex items-center gap-2">
+                            <span class="hidden sm:inline text-slate-400">:</span>
+                            <input type="text" value="Kamis, 19 November 2026" class="editable-field w-full font-semibold text-slate-900 bg-transparent px-2 py-1 rounded text-sm sm:text-base">
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 w-24 shrink-0">Instruktur</span>
+                        <div class="flex-1 flex items-center gap-2">
+                            <span class="hidden sm:inline text-slate-400">:</span>
+                            <input type="text" value="Pak Asep Ulumudin, S.Kom" class="editable-field w-full font-semibold text-slate-900 bg-transparent px-2 py-1 rounded text-sm sm:text-base">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 1: PENGENALAN KONSEP VPS & CLOUD -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 1</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Pengenalan Konsep VPS & Cloud</h3>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">Konsep Dasar Infrastruktur</span>
+            </div>
+            <p class="text-sm text-slate-600">
+                Jelaskan secara singkat pemahaman Anda mengenai perbedaan layanan berikut dengan mengisi kotak yang tersedia:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Shared Hosting -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 border-t-4 border-t-aws-navy flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">1. Shared Hosting</h4>
+                        <span class="text-[11px] font-mono bg-slate-200 text-slate-700 px-2 py-0.5 rounded">Multi-Tenant</span>
+                    </div>
+                    <textarea rows="4" class="editable-field w-full text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed resize-y">Layanan hosting di mana banyak situs web berbagi satu server fisik dan sumber daya (CPU, RAM, disk) yang sama. Biaya murah dan mudah dikelola, tetapi performa bisa terpengaruh oleh pengguna lain di server tersebut.</textarea>
+                </div>
+
+                <!-- Dedicated Server -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 border-t-4 border-t-aws-navy flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">2. Dedicated Server</h4>
+                        <span class="text-[11px] font-mono bg-slate-200 text-slate-700 px-2 py-0.5 rounded">Single-Tenant</span>
+                    </div>
+                    <textarea rows="4" class="editable-field w-full text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed resize-y">Layanan penyewaan satu server fisik secara utuh untuk satu pengguna atau organisasi saja. Memberikan kontrol penuh, performa maksimal, dan keamanan tinggi, namun biayanya mahal dan butuh keahlian teknis tinggi.</textarea>
+                </div>
+
+                <!-- Amazon Lightsail -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 border-t-4 border-t-aws-orange flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">3. Amazon Lightsail</h4>
+                        <span class="text-[11px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded">AWS VPS Simple</span>
+                    </div>
+                    <textarea rows="4" class="editable-field w-full text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed resize-y">Layanan VPS (Virtual Private Server) dari AWS yang mudah digunakan dengan paket harga bulanan tetap (bundling komputasi, penyimpanan, dan transfer data), cocok untuk pemula atau aplikasi skala kecil-menengah.</textarea>
+                </div>
+
+                <!-- Amazon EC2 -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 border-t-4 border-t-aws-orange flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">4. Amazon EC2</h4>
+                        <span class="text-[11px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded">AWS IaaS Scalable</span>
+                    </div>
+                    <textarea rows="4" class="editable-field w-full text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed resize-y">Layanan komputasi awan (IaaS) dari AWS yang sangat fleksibel dan dapat diskalakan sesuai kebutuhan. Pengguna memiliki kontrol penuh atas konfigurasi server virtual, jaringan, keamanan, serta sistem pembayaran berbasis penggunaan (pay-as-you-go).</textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 2: PERSIAPAN DAN PROVISIONING SERVER -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 2</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Persiapan dan Provisioning Server</h3>
+                </div>
+                <span class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">4/4 Tahapan Selesai</span>
+            </div>
+
+            <p class="text-sm text-slate-600">
+                Beri tanda centang pada kotak setelah Anda berhasil menyelesaikan setiap tahapan di konsol AWS:
+            </p>
+
+            <!-- Checklist Interaktif -->
+            <div class="space-y-2.5">
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Mengaktifkan akun AWS dan login ke Management Console.</span>
+                </label>
+
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Memilih Region AWS terdekat (misal: <code class="font-mono text-xs bg-slate-200 px-1.5 py-0.5 rounded">ap-southeast-1</code> / Singapore).</span>
+                </label>
+
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Memilih Amazon Machine Image (AMI), misalnya <strong class="text-slate-900">Ubuntu 22.04 LTS</strong>.</span>
+                </label>
+
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Memilih Instance Type dalam batas Free Tier (misal: <code class="font-mono text-xs bg-slate-200 px-1.5 py-0.5 rounded">t2.micro</code> / <code class="font-mono text-xs bg-slate-200 px-1.5 py-0.5 rounded">t3.micro</code>).</span>
+                </label>
+            </div>
+
+            <!-- Kotak Info Manajemen Key Pair -->
+            <div class="bg-amber-50 border-l-4 border-aws-orange rounded-r-xl p-4 sm:p-5 space-y-3">
+                <div class="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                    <svg class="w-5 h-5 text-aws-orange shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    <span>PENTING: Manajemen Key Pair</span>
+                </div>
+                <p class="text-xs sm:text-sm text-amber-900/90 leading-relaxed">
+                    Saat melakukan provisioning, AWS akan meminta Anda membuat <em>Key Pair</em>. File berakhiran <code class="font-mono bg-amber-100 px-1 rounded">.pem</code> atau <code class="font-mono bg-amber-100 px-1 rounded">.ppk</code> ini adalah <strong>"kunci rumah"</strong> server Anda. <strong>Simpan file ini di tempat yang aman.</strong> Jika hilang, Anda akan kehilangan akses ke dalam server.
+                </p>
+                <div class="pt-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <label for="keypair-input" class="text-sm font-semibold text-slate-800 shrink-0">Nama Key Pair yang saya buat:</label>
+                    <input id="keypair-input" type="text" value="key-vps-faisal.pem" oninput="syncSSHCommand()" class="editable-field font-mono text-sm font-semibold text-aws-navy bg-white px-3 py-1.5 rounded-lg border border-amber-300 w-full sm:w-72">
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 3: JARINGAN, KEAMANAN, DAN AKSES SERVER -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 3</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Jaringan, Keamanan, dan Akses Server</h3>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">Firewall & SSH</span>
+            </div>
+
+            <p class="text-sm text-slate-600">
+                Isi tabel <strong>Security Group</strong> di bawah ini dengan port yang benar untuk mengizinkan akses ke server web Anda:
+            </p>
+
+            <!-- Tabel Security Group -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-aws-navy text-white text-xs uppercase tracking-wider">
+                            <th class="py-3 px-4 font-semibold">Tipe Akses</th>
+                            <th class="py-3 px-4 font-semibold">Protokol</th>
+                            <th class="py-3 px-4 font-semibold">Port Range</th>
+                            <th class="py-3 px-4 font-semibold">Source (Sumber)</th>
+                            <th class="py-3 px-4 font-semibold">Deskripsi / Kegunaan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 bg-white">
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-semibold text-slate-900">SSH</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">TCP</td>
+                            <td class="py-3 px-4">
+                                <input type="text" value="22" class="editable-field font-mono font-bold text-aws-navy w-20 px-2 py-1 rounded bg-slate-50 text-center">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">Anywhere (0.0.0.0/0)</td>
+                            <td class="py-3 px-4 text-slate-600">Akses remote terminal</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 bg-amber-50/30">
+                            <td class="py-3 px-4 font-semibold text-slate-900">HTTP</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">TCP</td>
+                            <td class="py-3 px-4">
+                                <input type="text" value="80" class="editable-field font-mono font-bold text-emerald-700 w-20 px-2 py-1 rounded bg-emerald-50 border-emerald-300 text-center">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">Anywhere (0.0.0.0/0)</td>
+                            <td class="py-3 px-4 text-slate-600">Akses website tanpa enkripsi</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 bg-amber-50/30">
+                            <td class="py-3 px-4 font-semibold text-slate-900">HTTPS</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">TCP</td>
+                            <td class="py-3 px-4">
+                                <input type="text" value="443" class="editable-field font-mono font-bold text-emerald-700 w-20 px-2 py-1 rounded bg-emerald-50 border-emerald-300 text-center">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">Anywhere (0.0.0.0/0)</td>
+                            <td class="py-3 px-4 text-slate-600">Akses website aman (SSL)</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-semibold text-slate-900">Custom TCP</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">TCP</td>
+                            <td class="py-3 px-4">
+                                <input type="text" value="8080" class="editable-field font-mono font-bold text-aws-navy w-20 px-2 py-1 rounded bg-slate-50 text-center">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">My IP</td>
+                            <td class="py-3 px-4 text-slate-600">Akses panel admin khusus</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Terminal Command Block SSH -->
+            <div class="space-y-2 pt-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label class="text-sm font-medium text-slate-700">
+                        Tuliskan perintah lengkap yang Anda gunakan di terminal lokal untuk mengakses server melalui SSH:
+                    </label>
+                    <span class="text-xs text-slate-500 italic">*IP Publik otomatis sinkron dengan Fase 4 & 5</span>
+                </div>
+
+                <div class="bg-slate-900 text-slate-100 rounded-xl p-4 shadow-inner border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 overflow-x-auto font-mono text-xs sm:text-sm">
+                        <span class="text-emerald-400 select-none font-bold">$</span>
+                        <input id="ssh-command-input" type="text" value='ssh -i "key-vps-faisal.pem" ubuntu@54.169.120.45' class="bg-transparent text-amber-300 font-medium focus:outline-none focus:ring-1 focus:ring-aws-orange rounded px-1 py-0.5 w-full min-w-[320px]">
+                    </div>
+                    <button onclick="copySSH()" class="no-print self-end sm:self-auto inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs font-medium px-3 py-1.5 rounded-lg transition cursor-pointer shrink-0">
+                        <svg class="w-3.5 h-3.5 text-aws-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Salin Perintah</span>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500">
+                    Catatan: Ganti alamat IP <code class="font-mono text-slate-700">54.169.120.45</code> dengan <strong>Public IPv4 address</strong> milik instance EC2 Anda jika berbeda.
+                </p>
+            </div>
+        </section>
+
+        <!-- FASE 4: KONFIGURASI SISTEM OPERASI & WEB SERVER -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 4</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Konfigurasi Sistem Operasi & Web Server</h3>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">Linux CLI & Apache/Nginx</span>
+            </div>
+
+            <p class="text-sm text-slate-600">
+                Pasangkan perintah Linux berikut dengan fungsi yang tepat:
+            </p>
+
+            <!-- Kartu Pasangan Perintah Linux -->
+            <div class="grid grid-cols-1 gap-3">
+                <!-- Item 1 -> C -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-aws-navy text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                        <code class="font-mono text-sm font-semibold text-slate-900 bg-white px-2.5 py-1 rounded border border-slate-200">sudo apt update</code>
+                    </div>
+                    <div class="flex items-center gap-3 md:w-3/5">
+                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-aws-orange text-aws-dark font-bold text-xs shrink-0">
+                            Jawaban: C
+                        </span>
+                        <span class="text-sm text-slate-700 font-medium">Memperbarui daftar paket repositori OS.</span>
+                    </div>
+                </div>
+
+                <!-- Item 2 -> D -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-aws-navy text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                        <code class="font-mono text-sm font-semibold text-slate-900 bg-white px-2.5 py-1 rounded border border-slate-200">sudo systemctl restart apache2</code>
+                    </div>
+                    <div class="flex items-center gap-3 md:w-3/5">
+                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-aws-orange text-aws-dark font-bold text-xs shrink-0">
+                            Jawaban: D
+                        </span>
+                        <span class="text-sm text-slate-700 font-medium">Memuat ulang layanan web server.</span>
+                    </div>
+                </div>
+
+                <!-- Item 3 -> A -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-aws-navy text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                        <code class="font-mono text-sm font-semibold text-slate-900 bg-white px-2.5 py-1 rounded border border-slate-200">ls -la</code>
+                    </div>
+                    <div class="flex items-center gap-3 md:w-3/5">
+                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-aws-orange text-aws-dark font-bold text-xs shrink-0">
+                            Jawaban: A
+                        </span>
+                        <span class="text-sm text-slate-700 font-medium">Menampilkan seluruh file termasuk yang tersembunyi.</span>
+                    </div>
+                </div>
+
+                <!-- Item 4 -> B -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-aws-navy text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
+                        <code class="font-mono text-sm font-semibold text-slate-900 bg-white px-2.5 py-1 rounded border border-slate-200">chmod 400 key.pem</code>
+                    </div>
+                    <div class="flex items-center gap-3 md:w-3/5">
+                        <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-aws-orange text-aws-dark font-bold text-xs shrink-0">
+                            Jawaban: B
+                        </span>
+                        <span class="text-sm text-slate-700 font-medium">Mengubah hak akses file menjadi read-only.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tugas Praktik Web Server -->
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl p-4 sm:p-5 space-y-3">
+                <h4 class="font-bold text-emerald-950 text-sm flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                    </svg>
+                    <span>Tugas Praktik Web Server:</span>
+                </h4>
+                <ol class="list-decimal list-inside text-xs sm:text-sm text-emerald-900 space-y-1">
+                    <li>Instal Apache atau Nginx pada server Anda.</li>
+                    <li>Buat file <code class="font-mono bg-emerald-100 px-1 rounded">index.html</code> kustom di direktori <code class="font-mono bg-emerald-100 px-1 rounded">/var/www/html/</code>.</li>
+                    <li>Buka IP Publik server Anda di browser.</li>
+                </ol>
+                <div class="pt-2 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span class="text-sm font-semibold text-emerald-950 italic">Alamat IP Publik Server saya:</span>
+                    <div class="inline-flex items-center bg-white border border-emerald-300 rounded-lg px-3 py-1">
+                        <span class="font-mono text-sm text-slate-500 select-none">http://</span>
+                        <input id="public-ip-input" type="text" value="54.169.120.45" oninput="syncPublicIP(this.value)" class="editable-field font-mono text-sm font-bold text-emerald-800 bg-transparent focus:outline-none w-40">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FASE 5: DEPLOYMENT APLIKASI DAN DOMAIN -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 5</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Deployment Aplikasi dan Domain</h3>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">DNS & SSL/TLS</span>
+            </div>
+
+            <p class="text-sm text-slate-600">
+                Untuk mengarahkan nama domain ke IP Publik server AWS, Anda perlu mengatur DNS Record. Lengkapi tabel konfigurasi <strong>A-Record</strong> di bawah ini:
+            </p>
+
+            <!-- Tabel DNS Record -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-aws-navy text-white text-xs uppercase tracking-wider">
+                            <th class="py-3 px-4 font-semibold">Tipe Record</th>
+                            <th class="py-3 px-4 font-semibold">Name / Host</th>
+                            <th class="py-3 px-4 font-semibold">Value / Target (IP AWS)</th>
+                            <th class="py-3 px-4 font-semibold">TTL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 bg-white">
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-mono font-bold text-aws-navy">A</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">@ (atau namadomain.com)</td>
+                            <td class="py-3 px-4">
+                                <input id="dns-ip-1" type="text" value="54.169.120.45" class="editable-field font-mono font-semibold text-slate-900 bg-slate-50 px-2.5 py-1 rounded w-full max-w-[200px]">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">Auto / 3600</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-mono font-bold text-aws-navy">A (atau CNAME)</td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-700">www</td>
+                            <td class="py-3 px-4">
+                                <input id="dns-ip-2" type="text" value="54.169.120.45" class="editable-field font-mono font-semibold text-slate-900 bg-slate-50 px-2.5 py-1 rounded w-full max-w-[200px]">
+                            </td>
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600">Auto / 3600</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Checklist Deployment Akhir -->
+            <div class="space-y-2.5 pt-1">
+                <h4 class="text-sm font-bold text-slate-800">Checklist Deployment Akhir:</h4>
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Mengunggah file website menggunakan SFTP (FileZilla/Cyberduck) ke direktori web.</span>
+                </label>
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Memastikan propagasi DNS selesai (domain dapat diakses di browser).</span>
+                </label>
+                <label class="flex items-start sm:items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition">
+                    <input type="checkbox" checked class="w-5 h-5 mt-0.5 sm:mt-0 rounded text-aws-orange focus:ring-aws-orange accent-amber-500 cursor-pointer">
+                    <span class="text-sm text-slate-800 font-medium">Menginstal Let's Encrypt (Certbot) dan mengaktifkan HTTPS.</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- FASE 6: MANAJEMEN, MONITORING & BACKUP -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5 print-shadow-none print-break-inside">
+            <div class="border-b border-slate-200 pb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-aws-orange">Fase 6</span>
+                    <h3 class="text-lg font-bold text-aws-navy">Manajemen, Monitoring & Backup</h3>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">CloudWatch & EBS Snapshot</span>
+            </div>
+
+            <p class="text-sm text-slate-600">
+                Pemeliharaan server sangat penting. Gunakan <strong>AWS CloudWatch</strong> untuk melihat status server Anda dan dokumentasikan metrik saat ini.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Metrik CloudWatch -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-900 text-sm">Catat Metrik Server Saat Ini (CloudWatch):</h4>
+                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            Healthy
+                        </span>
+                    </div>
+                    <div class="space-y-3 pt-1">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <span class="text-xs font-medium text-slate-600">Rata-rata CPU Utilization:</span>
+                            <input type="text" value="1.2%" class="editable-field font-mono text-sm font-bold text-aws-navy text-left sm:text-right w-full sm:w-32 px-1">
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-white p-2.5 rounded-lg border border-slate-200">
+                            <span class="text-xs font-medium text-slate-600">Status Check Failed:</span>
+                            <input type="text" value="0 (2/2 checks passed)" class="editable-field font-mono text-xs font-bold text-emerald-700 text-left sm:text-right w-full sm:w-44 px-1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Langkah Backup (Snapshot) -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                    <h4 class="font-bold text-slate-900 text-sm">Langkah Backup (Snapshot):</h4>
+                    <ol class="list-decimal list-inside text-xs sm:text-sm text-slate-700 space-y-1.5 pt-1">
+                        <li>Buka menu <strong class="text-slate-900">Volumes</strong> di konsol EC2.</li>
+                        <li>Pilih Volume server Anda.</li>
+                        <li>Klik <code class="font-mono text-xs bg-slate-200 px-1.5 py-0.5 rounded">Actions &gt; Create Snapshot</code>.</li>
+                        <li>Beri deskripsi dan simpan.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATATAN & EVALUASI INSTRUKTUR -->
+        <section class="bg-white rounded-2xl shadow-sm border-2 border-aws-navy/20 p-6 space-y-6 print-shadow-none print-break-inside">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="text-base font-bold text-aws-navy">Catatan & Evaluasi Instruktur</h3>
+                <span class="text-xs text-slate-400 font-mono">Diisi oleh Instruktur</span>
+            </div>
+
+            <div class="space-y-4">
+                <div class="border-b border-dashed border-slate-300 h-7"></div>
+                <div class="border-b border-dashed border-slate-300 h-7"></div>
+            </div>
+
+            <div class="pt-4 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
+                <div class="text-xs text-slate-500">
+                    <p>Modul Praktik AWS Cloud - Fase 1 s.d. 6</p>
+                    <p>SMK Rekayasa Perangkat Lunak • XI RPL 1</p>
+                </div>
+
+                <div class="text-center sm:text-right self-end">
+                    <p class="text-xs text-slate-500 mb-14">Tanda Tangan Instruktur,</p>
+                    <div class="border-t border-slate-400 pt-1.5 px-4">
+                        <p class="font-bold text-sm text-slate-900">Pak Asep Ulumudin, S.Kom</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-slate-400 no-print">
+        <p>LKPD Manajemen Server VPS AWS &bull; Dikerjakan oleh Faisal Akbar Mubaraq Zein (XI RPL 1)</p>
+    </footer>
+
+    <script>
+        // Fungsi menampilkan notifikasi toast pengganti alert()
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Sinkronisasi otomatis nama Key Pair ke perintah SSH
+        function syncSSHCommand() {
+            const keyPair = document.getElementById('keypair-input').value.trim() || 'key-vps-faisal.pem';
+            const ip = document.getElementById('public-ip-input').value.trim() || '54.169.120.45';
+            document.getElementById('ssh-command-input').value = `ssh -i "${keyPair}" ubuntu@${ip}`;
+        }
+
+        // Sinkronisasi otomatis IP Publik ke perintah SSH & Tabel DNS Fase 5
+        function syncPublicIP(ipValue) {
+            const cleanIP = ipValue.trim() || '54.169.120.45';
+            const keyPair = document.getElementById('keypair-input').value.trim() || 'key-vps-faisal.pem';
+            document.getElementById('ssh-command-input').value = `ssh -i "${keyPair}" ubuntu@${cleanIP}`;
+            document.getElementById('dns-ip-1').value = cleanIP;
+            document.getElementById('dns-ip-2').value = cleanIP;
+        }
+
+        // Salin perintah SSH ke clipboard
+        function copySSH() {
+            const sshInput = document.getElementById('ssh-command-input');
+            sshInput.select();
+            sshInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast('Perintah SSH berhasil disalin!');
+            } catch (err) {
+                showToast('Gagal menyalin perintah.');
+            }
+        }
+    </script>
+</body>
+</html>
